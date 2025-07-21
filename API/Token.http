@@ -1,0 +1,7 @@
+POST http://localhost:8080/token HTTP/1.1
+Content-Type: application/json
+
+{
+    "rate_limit" : 10,
+    "rate_limit_duration" : 60
+}

@@ -3,5 +3,6 @@ Content-Type: application/json
 
 {
     "rate_limit" : 10,
-    "rate_limit_duration" : 60
+    "rate_limit_duration" : 60,
+    "block_duration" : 300
 }

@@ -1,0 +1,47 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/fhsmendes/rate-limiter/configs"
+	"github.com/fhsmendes/rate-limiter/entity"
+	"github.com/go-chi/jwtauth"
+)
+
+type AuthHandler struct {
+	Jwt *jwtauth.JWTAuth
+}
+
+func NewAuthHandler() *AuthHandler {
+	return &AuthHandler{
+		Jwt: configs.Envs.Token_Auth, // Aqui que você garante que não é nil
+	}
+}
+
+func (a *AuthHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
+	var inputData entity.TokenAuth
+	err := json.NewDecoder(r.Body).Decode(&inputData)
+	if err != nil {
+		http.Error(w, "Invalid input data", http.StatusBadRequest)
+		return
+	}
+
+	_, tokenString, _ := a.Jwt.Encode(map[string]interface{}{
+		"rate_limit":          inputData.RateLimit,
+		"rate_limit_duration": inputData.RateLimitDuration,
+		"block_duration":      inputData.BlockDuration,
+		"exp":                 time.Now().Add(time.Duration(configs.Envs.Jwt_Expires_In) * time.Second).Unix(),
+	})
+
+	apiKey := struct {
+		API_KEY string `json:"api_key"`
+	}{
+		API_KEY: tokenString,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(apiKey)
+}
